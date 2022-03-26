@@ -4,13 +4,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .models import CustomUser
+from .models import AuthUser
 from .serializers import UserSerializer, TokenObtainPairSerializer, PasswordSerializer
 
 
 class UserView(ModelViewSet):
     serializer_class = UserSerializer
-    queryset = CustomUser.objects.all()
+    queryset = AuthUser.objects.all()
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

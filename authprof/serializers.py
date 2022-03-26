@@ -4,7 +4,7 @@ from rest_framework_simplejwt.serializers import (
     TokenObtainPairSerializer as JwtTokenObtainPairSerializer,
 )
 
-from authprof.models import CustomUser
+from authprof.models import AuthUser
 
 
 class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
@@ -13,7 +13,7 @@ class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CustomUser
+        model = AuthUser
         fields = (
             "password",
             "username",
