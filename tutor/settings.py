@@ -145,3 +145,12 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "authprof.AuthUser"
+
+# SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+SENDGRID_API_KEY = "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"
+
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'apikey'  # this is exactly the value 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
