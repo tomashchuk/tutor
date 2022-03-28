@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
+from rest_framework.exceptions import NotFound
 
 
 class EmailBackend(ModelBackend):
@@ -13,5 +14,5 @@ class EmailBackend(ModelBackend):
             if user.check_password(kwargs.get("password")):
                 return user
         except user_modal.DoesNotExist:
-            pass
+            raise NotFound()
         return
