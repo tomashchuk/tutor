@@ -7,6 +7,13 @@ from django.utils.translation import gettext_lazy as _
 class AuthUser(AbstractUser):
     username_validator = UnicodeUsernameValidator()
 
+    STUDENT = "student"
+    TUTOR = "tutor"
+    TYPES = (
+        (TUTOR, "Tutor"),
+        (STUDENT, "Student")
+    )
+
     username = models.CharField(
         _("username"),
         max_length=101,
@@ -26,6 +33,7 @@ class AuthUser(AbstractUser):
             "unique": _("A user with that email already exists."),
         },
     )
+    user_type = models.CharField(choices=TYPES, max_length=10, default=STUDENT)
 
     def save(self, *args, **kwargs):
         self.username = f"{self.first_name} {self.last_name}"

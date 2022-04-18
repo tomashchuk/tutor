@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     "authprof.apps.AuthConfig",
     "rest_framework",
     "drf_yasg",
+    "learning",
+    "shared",
+    'mptt',
 ]
 
 MIDDLEWARE = [
