@@ -65,6 +65,8 @@ class Material(BaseModel):
 class Quiz(BaseModel):
     time_to_complete = models.PositiveSmallIntegerField(null=True)
 
+    material = models.ForeignKey(Material, on_delete=models.CASCADE)
+
 
 class AnswerOption(BaseModel):
     text = models.CharField(max_length=200)
@@ -96,6 +98,6 @@ class QuizResult(BaseModel):
         (FAILED, "Failed"),
     )
 
-    status = models.CharField(max_length=10, choices=STATUS, default=IN_PROGRESS)
+    status = models.CharField(max_length=20, choices=STATUS, default=IN_PROGRESS)
     quiz = models.ForeignKey(Quiz, on_delete=models.PROTECT)
     student = models.ForeignKey(AuthUser, on_delete=models.CASCADE)

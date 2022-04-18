@@ -50,4 +50,5 @@ urlpatterns = [
     ),
     path("admin/", admin.site.urls),
     path("auth/", include("authprof.urls")),
+    path("learing/", include("learning.urls")),
 ]
