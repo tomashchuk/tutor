@@ -8,3 +8,4 @@ djangorestframework-simplejwt
 drf-yasg
 django-cors-headers
 django-cors-middleware
+django-mptt
