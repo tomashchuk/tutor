@@ -57,15 +57,20 @@ class Material(BaseModel):
     name = models.CharField(max_length=255, null=False)
     description = models.TextField(null=True)
     order = models.PositiveSmallIntegerField()
+    material_type = models.CharField(max_length=20, choices=TYPE, default=LESSON)
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="materials")
+
+    class Meta:
+        ordering = ["order"]
 
     def __str__(self):
         return self.name
 
 
 class Quiz(BaseModel):
-    time_to_complete = models.PositiveSmallIntegerField(null=True)
+    time_to_complete = models.PositiveSmallIntegerField(null=True, blank=True)
 
-    material = models.ForeignKey(Material, on_delete=models.CASCADE)
+    material = models.OneToOneField(Material, on_delete=models.CASCADE, primary_key=True, related_name="quiz")
 
 
 class AnswerOption(BaseModel):

@@ -5,16 +5,28 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from .models import (
-    Course, CourseCategory, Topic
+    Course, CourseCategory, Topic, Material
 )
 from .serializers import (
-    CourseSerializer, CourseCategorySerializer, TopicSerializer
+    CourseSerializer, CourseCategorySerializer, TopicSerializer, MaterialSerializer
 )
 
 
 class CourseViewSet(ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('category_id', openapi.IN_QUERY, description="category id", type=openapi.TYPE_INTEGER)]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        category_id = self.request.query_params.get("category_id")
+        if category_id:
+            return self.queryset.filter(category_id=category_id)
+        return self.queryset
 
 
 class CourseCategoryViewSet(ModelViewSet):
@@ -27,13 +39,30 @@ class TopicViewSet(ModelViewSet):
     serializer_class = TopicSerializer
 
     @swagger_auto_schema(manual_parameters=[
-        openapi.Parameter('category_id', openapi.IN_QUERY, description="category id", type=openapi.TYPE_INTEGER)]
+        openapi.Parameter('course_id', openapi.IN_QUERY, description="course id", type=openapi.TYPE_INTEGER)]
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
-        category_id = self.request.query_params.get("category_id")
-        if category_id:
-            return self.queryset.filter(course_id=category_id)
+        course_id = self.request.query_params.get("course_id")
+        if course_id:
+            return self.queryset.filter(course_id=course_id)
+        raise ValidationError()
+
+
+class MaterialViewSet(ModelViewSet):
+    queryset = Material.objects.all()
+    serializer_class = MaterialSerializer
+
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('topic_id', openapi.IN_QUERY, description="topic id", type=openapi.TYPE_INTEGER)]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        topic_id = self.request.query_params.get("topic_id")
+        if topic_id:
+            return self.queryset.filter(topic_id=topic_id)
         raise ValidationError()
