@@ -31,6 +31,22 @@ class Course(BaseModel):
         return self.name
 
 
+class UserCourse(BaseModel):
+    TODO = "todo"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    STATUS = (
+        (TODO, "To Do"),
+        (IN_PROGRESS, "In Progress"),
+        (COMPLETED, "Completed"),
+    )
+
+    user = models.ForeignKey(AuthUser, on_delete=models.SET_NULL, null=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+
+    status = models.CharField(max_length=20, choices=STATUS, default=TODO)
+
+
 class Topic(BaseModel):
     name = models.CharField(max_length=255, null=False)
     description = models.TextField()
@@ -83,8 +99,14 @@ class AnswerOption(BaseModel):
 class QuizQuestion(BaseModel):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
     text = models.CharField(max_length=200)
+    order = models.PositiveSmallIntegerField()
     possible_answers = models.ManyToManyField(AnswerOption)
     correct = models.ForeignKey(AnswerOption, related_name="correct", default=None, on_delete=models.CASCADE)
+
+    coins = models.PositiveSmallIntegerField(default=1)
+
+    def __str__(self):
+        return self.text
 
 
 class QuizAnswer(BaseModel):
