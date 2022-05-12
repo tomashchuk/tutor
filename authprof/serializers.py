@@ -20,9 +20,25 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "email",
+            "user_type",
         )
         extra_kwargs = {"password": {"write_only": True}}
 
 
+class UpdateUserSerializer(UserSerializer):
+    class Meta:
+        model = AuthUser
+        fields = (
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+        )
+
+
 class PasswordSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=30, min_length=8)
+
+
+class UpdatePasswordSerializer(PasswordSerializer):
+    old_password = serializers.CharField(max_length=30, min_length=8)

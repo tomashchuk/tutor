@@ -14,7 +14,8 @@ class CourseCategorySerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    category = CourseCategorySerializer(read_only=True)
+    category = serializers.PrimaryKeyRelatedField(queryset=CourseCategory.objects.all(), write_only=True)
+    # category = CourseCategorySerializer(read_only=True, required=False)
     user_status = serializers.SerializerMethodField()
 
     def get_user_status(self, obj):
@@ -27,10 +28,34 @@ class CourseSerializer(serializers.ModelSerializer):
         except UserCourse.DoesNotExist:
             return None
 
+    def to_representation(self, instance):
+        data = super(CourseSerializer, self).to_representation(instance)
+        data.update(
+                    {"category": CourseCategorySerializer(
+                        instance=CourseCategory.objects.get(id=instance.category.id),
+                        context=self.context).data
+                     }
+        )
+        return data
 
     class Meta:
         model = Course
         fields = "__all__"
+        extra_kwargs = {"tutor": {"read_only": True}}
+
+
+class CreateCourseSerializer(CourseSerializer):
+    category = serializers.PrimaryKeyRelatedField(queryset=CourseCategory.objects.all(), write_only=True)
+
+    def to_representation(self, instance):
+        data = super(CourseSerializer, self).to_representation(instance)
+        data.update(
+                    {"category": CourseCategorySerializer(
+                        instance=CourseCategory.objects.get(id=instance.category.id),
+                        context=self.context).data
+                     }
+        )
+        return data
 
 
 class QuizSerializer(serializers.ModelSerializer):
@@ -77,3 +102,4 @@ class UserCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserCourse
         fields = "__all__"
+        extra_kwargs = {"user": {"read_only": True}, "status": {"read_only": True}}

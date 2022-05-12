@@ -4,6 +4,7 @@ from rest_framework.viewsets import ModelViewSet
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
+from authprof.models import AuthUser
 from .models import (
     Course, CourseCategory, Topic, Material, QuizQuestion, UserCourse
 )
@@ -13,7 +14,7 @@ from .serializers import (
     TopicSerializer,
     MaterialSerializer,
     QuizQuestionSerializer,
-    UserCourseSerializer,
+    UserCourseSerializer, CreateCourseSerializer,
 )
 
 
@@ -25,6 +26,7 @@ class CourseViewSet(ModelViewSet):
         manual_parameters=[
             openapi.Parameter('category_id', openapi.IN_QUERY, description="category id", type=openapi.TYPE_ARRAY, items=openapi.TYPE_INTEGER),
             openapi.Parameter('include_my', openapi.IN_QUERY, description=" ", type=openapi.TYPE_INTEGER),
+            openapi.Parameter('include_my_tutor', openapi.IN_QUERY, description=" ", type=openapi.TYPE_INTEGER),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -32,13 +34,30 @@ class CourseViewSet(ModelViewSet):
 
     def get_queryset(self):
         category_id = self.request.query_params.getlist("category_id")
-        # include_my = int(self.request.query_params.get("include_my"))
-        # courses_asigned_ids = []
-        # if include_my:
-        #     courses_asigned_ids = UserCourse.objects.filter(user=self.request.user)
+        include_my = self.request.query_params.get("include_my")
+        include_my_tutor = self.request.query_params.get("include_my_tutor")
+        queryset = self.queryset
+        user = self.request.user
         if category_id:
-            return self.queryset.filter(category_id__in=category_id, public=True)
-        return self.queryset.filter(public=True)
+            queryset = queryset.filter(category_id__in=category_id)
+        if user.user_type == AuthUser.TUTOR:
+            return queryset.filter(tutor=self.request.user)
+        queryset = queryset.filter(public=True, active=True)
+        if include_my == "true":
+            courses_asigned_ids = UserCourse.objects.filter(user=self.request.user)
+            courses_asigned_ids = [courses_asigned.course_id for courses_asigned in courses_asigned_ids]
+            queryset = queryset.filter(id__in=courses_asigned_ids)
+        return queryset
+
+    # def create(self, request, *args, **kwargs):
+    #     self.serializer_class = CreateCourseSerializer
+    #     return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if not user or user.user_type != AuthUser.TUTOR:
+            raise ValidationError()
+        serializer.save(tutor=self.request.user)
 
 
 class CourseCategoryViewSet(ModelViewSet):
@@ -60,7 +79,7 @@ class TopicViewSet(ModelViewSet):
         course_id = self.request.query_params.get("course_id")
         if course_id:
             return self.queryset.filter(course_id=course_id)
-        raise ValidationError()
+        return self.queryset
 
 
 class MaterialViewSet(ModelViewSet):
@@ -102,4 +121,8 @@ class UserCourseViewSet(ModelViewSet):
     serializer_class = UserCourseSerializer
 
     def perform_create(self, serializer):
+        course = serializer.validated_data["course"]
+        queryset = self.queryset.filter(user=self.request.user, course_id=course)
+        if queryset:
+            raise ValidationError("You are already enrolled for this course")
         serializer.save(user=self.request.user)

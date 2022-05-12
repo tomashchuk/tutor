@@ -22,10 +22,11 @@ class Course(BaseModel):
     name = models.CharField(max_length=255, null=False)
     description = models.TextField()
     public = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
 
     tutor = models.ForeignKey(AuthUser, on_delete=models.CASCADE, related_name="courses")
     category = models.ForeignKey(CourseCategory, on_delete=models.CASCADE)
-    secret_code = models.CharField(max_length=255, validators=[MinLengthValidator(6)])
+    secret_code = models.CharField(max_length=255, validators=[MinLengthValidator(6)], unique=True)
 
     def __str__(self):
         return self.name
