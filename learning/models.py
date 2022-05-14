@@ -9,10 +9,12 @@ from shared.models import BaseModel
 
 class CourseCategory(MPTTModel):
     name = models.CharField(max_length=50, unique=True)
-    parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    parent = TreeForeignKey(
+        "self", on_delete=models.CASCADE, null=True, blank=True, related_name="children"
+    )
 
     class MPTTMeta:
-        order_insertion_by = ['name']
+        order_insertion_by = ["name"]
 
     def __str__(self):
         return self.name
@@ -24,9 +26,13 @@ class Course(BaseModel):
     public = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
 
-    tutor = models.ForeignKey(AuthUser, on_delete=models.CASCADE, related_name="courses")
+    tutor = models.ForeignKey(
+        AuthUser, on_delete=models.CASCADE, related_name="courses"
+    )
     category = models.ForeignKey(CourseCategory, on_delete=models.CASCADE)
-    secret_code = models.CharField(max_length=255, validators=[MinLengthValidator(6)], unique=True)
+    secret_code = models.CharField(
+        max_length=255, validators=[MinLengthValidator(6)], unique=True
+    )
 
     def __str__(self):
         return self.name
@@ -60,6 +66,7 @@ class Topic(BaseModel):
     def __str__(self):
         return self.name
 
+
 # class MaterialMedia(BaseModel):
 #     IMAGE
 #     type =
@@ -90,7 +97,9 @@ class Material(BaseModel):
 class Quiz(BaseModel):
     time_to_complete = models.PositiveSmallIntegerField(null=True, blank=True)
 
-    material = models.OneToOneField(Material, on_delete=models.CASCADE, primary_key=True, related_name="quiz")
+    material = models.OneToOneField(
+        Material, on_delete=models.CASCADE, primary_key=True, related_name="quiz"
+    )
 
 
 class AnswerOption(BaseModel):
@@ -101,11 +110,13 @@ class AnswerOption(BaseModel):
 
 
 class QuizQuestion(BaseModel):
-    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="questions")
     text = models.CharField(max_length=200)
     order = models.PositiveSmallIntegerField()
     possible_answers = models.ManyToManyField(AnswerOption)
-    correct = models.ForeignKey(AnswerOption, related_name="correct", default=None, on_delete=models.CASCADE)
+    correct = models.ForeignKey(
+        AnswerOption, related_name="correct", default=None, on_delete=models.CASCADE
+    )
 
     coins = models.PositiveSmallIntegerField(default=1)
 

@@ -31,7 +31,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
-    'corsheaders',
+    "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -43,15 +43,15 @@ INSTALLED_APPS = [
     "drf_yasg",
     "learning",
     "shared",
-    'mptt',
+    "mptt",
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    'corsheaders.middleware.CorsPostCsrfMiddleware',    # TODO check if needed
+    "corsheaders.middleware.CorsPostCsrfMiddleware",  # TODO check if needed
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -59,7 +59,9 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_ALL_ORIGINS = True   # If this is used then `CORS_ALLOWED_ORIGINS` will not have any effect
+CORS_ALLOW_ALL_ORIGINS = (
+    True  # If this is used then `CORS_ALLOWED_ORIGINS` will not have any effect
+)
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "tutor.urls"
@@ -124,12 +126,8 @@ REST_FRAMEWORK = {
 }
 
 SWAGGER_SETTINGS = {
-   'SECURITY_DEFINITIONS': {
-        'Bearer': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header'
-        }
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
     }
 }
 
@@ -160,10 +158,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "authprof.AuthUser"
 
 # SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
-SENDGRID_API_KEY = "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"
+SENDGRID_API_KEY = (
+    "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"
+)
 
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = 'apikey'  # this is exactly the value 'apikey'
+EMAIL_HOST = "smtp.sendgrid.net"
+EMAIL_HOST_USER = "apikey"  # this is exactly the value 'apikey'
 EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True

@@ -1,6 +1,13 @@
 from rest_framework import serializers
 from .models import (
-    Course, CourseCategory, Topic, Material, Quiz, QuizQuestion, AnswerOption, UserCourse
+    Course,
+    CourseCategory,
+    Topic,
+    Material,
+    Quiz,
+    QuizQuestion,
+    AnswerOption,
+    UserCourse,
 )
 
 
@@ -14,7 +21,9 @@ class CourseCategorySerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(queryset=CourseCategory.objects.all(), write_only=True)
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=CourseCategory.objects.all(), write_only=True
+    )
     # category = CourseCategorySerializer(read_only=True, required=False)
     user_status = serializers.SerializerMethodField()
 
@@ -23,7 +32,9 @@ class CourseSerializer(serializers.ModelSerializer):
         if not request.user:
             return None
         try:
-            user_course = UserCourse.objects.get(course_id=obj.id, user_id=request.user.id)
+            user_course = UserCourse.objects.get(
+                course_id=obj.id, user_id=request.user.id
+            )
             return user_course.status
         except UserCourse.DoesNotExist:
             return None
@@ -31,10 +42,12 @@ class CourseSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super(CourseSerializer, self).to_representation(instance)
         data.update(
-                    {"category": CourseCategorySerializer(
-                        instance=CourseCategory.objects.get(id=instance.category.id),
-                        context=self.context).data
-                     }
+            {
+                "category": CourseCategorySerializer(
+                    instance=CourseCategory.objects.get(id=instance.category.id),
+                    context=self.context,
+                ).data
+            }
         )
         return data
 
@@ -45,15 +58,19 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class CreateCourseSerializer(CourseSerializer):
-    category = serializers.PrimaryKeyRelatedField(queryset=CourseCategory.objects.all(), write_only=True)
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=CourseCategory.objects.all(), write_only=True
+    )
 
     def to_representation(self, instance):
         data = super(CourseSerializer, self).to_representation(instance)
         data.update(
-                    {"category": CourseCategorySerializer(
-                        instance=CourseCategory.objects.get(id=instance.category.id),
-                        context=self.context).data
-                     }
+            {
+                "category": CourseCategorySerializer(
+                    instance=CourseCategory.objects.get(id=instance.category.id),
+                    context=self.context,
+                ).data
+            }
         )
         return data
 

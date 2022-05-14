@@ -6,9 +6,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from authprof.models import AuthUser
 from .domain import swift_order_topics, swift_order_materials
-from .models import (
-    Course, CourseCategory, Topic, Material, QuizQuestion, UserCourse
-)
+from .models import Course, CourseCategory, Topic, Material, QuizQuestion, UserCourse
 from .serializers import (
     CourseSerializer,
     CourseCategorySerializer,
@@ -25,9 +23,25 @@ class CourseViewSet(ModelViewSet):
 
     @swagger_auto_schema(
         manual_parameters=[
-            openapi.Parameter('category_id', openapi.IN_QUERY, description="category id", type=openapi.TYPE_ARRAY, items=openapi.TYPE_INTEGER),
-            openapi.Parameter('include_my', openapi.IN_QUERY, description=" ", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('include_my_tutor', openapi.IN_QUERY, description=" ", type=openapi.TYPE_INTEGER),
+            openapi.Parameter(
+                "category_id",
+                openapi.IN_QUERY,
+                description="category id",
+                type=openapi.TYPE_ARRAY,
+                items=openapi.TYPE_INTEGER,
+            ),
+            openapi.Parameter(
+                "include_my",
+                openapi.IN_QUERY,
+                description=" ",
+                type=openapi.TYPE_INTEGER,
+            ),
+            openapi.Parameter(
+                "include_my_tutor",
+                openapi.IN_QUERY,
+                description=" ",
+                type=openapi.TYPE_INTEGER,
+            ),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -46,7 +60,9 @@ class CourseViewSet(ModelViewSet):
         queryset = queryset.filter(public=True, active=True)
         if include_my == "true":
             courses_asigned_ids = UserCourse.objects.filter(user=self.request.user)
-            courses_asigned_ids = [courses_asigned.course_id for courses_asigned in courses_asigned_ids]
+            courses_asigned_ids = [
+                courses_asigned.course_id for courses_asigned in courses_asigned_ids
+            ]
             queryset = queryset.filter(id__in=courses_asigned_ids)
         return queryset
 
@@ -70,14 +86,21 @@ class TopicViewSet(ModelViewSet):
     queryset = Topic.objects.all()
     serializer_class = TopicSerializer
 
-    @swagger_auto_schema(manual_parameters=[
-        openapi.Parameter('course_id', openapi.IN_QUERY, description="course id", type=openapi.TYPE_INTEGER)]
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "course_id",
+                openapi.IN_QUERY,
+                description="course id",
+                type=openapi.TYPE_INTEGER,
+            )
+        ]
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        order = request.data.get('order', None)
+        order = request.data.get("order", None)
         if order:
             instance = self.get_object()
             swift_order_topics(order, instance)
@@ -85,7 +108,9 @@ class TopicViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         course_id = request.data["course"]
-        last_topic = self.queryset.filter(course_id=course_id).order_by("-order").first()
+        last_topic = (
+            self.queryset.filter(course_id=course_id).order_by("-order").first()
+        )
         request.data["order"] = last_topic.order + 1 if last_topic else 1
         return super().create(request, *args, **kwargs)
 
@@ -100,20 +125,29 @@ class MaterialViewSet(ModelViewSet):
     queryset = Material.objects.all()
     serializer_class = MaterialSerializer
 
-    @swagger_auto_schema(manual_parameters=[
-        openapi.Parameter('topic_id', openapi.IN_QUERY, description="topic id", type=openapi.TYPE_INTEGER)]
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "topic_id",
+                openapi.IN_QUERY,
+                description="topic id",
+                type=openapi.TYPE_INTEGER,
+            )
+        ]
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
         topic_id = request.data["topic"]
-        last_material = self.queryset.filter(topic_id=topic_id).order_by("-order").first()
+        last_material = (
+            self.queryset.filter(topic_id=topic_id).order_by("-order").first()
+        )
         request.data["order"] = last_material.order + 1 if last_material else 1
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        order = request.data.get('order', None)
+        order = request.data.get("order", None)
         if order:
             instance = self.get_object()
             swift_order_materials(order, instance)
@@ -130,8 +164,15 @@ class QuizQuestionViewSet(ModelViewSet):
     queryset = QuizQuestion.objects.all()
     serializer_class = QuizQuestionSerializer
 
-    @swagger_auto_schema(manual_parameters=[
-        openapi.Parameter('quiz_id', openapi.IN_QUERY, description="quiz id", type=openapi.TYPE_INTEGER)]
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "quiz_id",
+                openapi.IN_QUERY,
+                description="quiz id",
+                type=openapi.TYPE_INTEGER,
+            )
+        ]
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)

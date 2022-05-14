@@ -1,6 +1,14 @@
 from django.contrib import admin
 from .models import (
-    CourseCategory, Course, Topic, Material, Quiz, AnswerOption, QuizQuestion, QuizAnswer, QuizResult
+    CourseCategory,
+    Course,
+    Topic,
+    Material,
+    Quiz,
+    AnswerOption,
+    QuizQuestion,
+    QuizAnswer,
+    QuizResult,
 )
 
 
@@ -47,4 +55,3 @@ class QuizAnswerAdmin(admin.ModelAdmin):
 @admin.register(QuizResult)
 class QuizResultAdmin(admin.ModelAdmin):
     pass
-

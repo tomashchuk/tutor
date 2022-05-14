@@ -1,5 +1,4 @@
 from django.contrib.auth.hashers import check_password
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -7,8 +6,13 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from .models import AuthUser
-from .serializers import UserSerializer, TokenObtainPairSerializer, PasswordSerializer, UpdateUserSerializer, \
-    UpdatePasswordSerializer
+from .serializers import (
+    UserSerializer,
+    TokenObtainPairSerializer,
+    PasswordSerializer,
+    UpdateUserSerializer,
+    UpdatePasswordSerializer,
+)
 
 
 class UserView(ModelViewSet):
@@ -25,9 +29,11 @@ class UserView(ModelViewSet):
         """
         `Update User`
         """
-        partial = kwargs.pop('partial', False)
+        partial = kwargs.pop("partial", False)
         user = self.request.user
-        serializer = self.update_serializer_class(user, data=request.data, partial=partial)
+        serializer = self.update_serializer_class(
+            user, data=request.data, partial=partial
+        )
         if serializer.is_valid():
             self.perform_update(serializer)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -52,7 +58,9 @@ class UserView(ModelViewSet):
         # user = self.get_object()
         user = self.request.user
         serializer = UpdatePasswordSerializer(data=request.data)
-        if serializer.is_valid() and check_password(serializer.validated_data["old_password"], user.password):
+        if serializer.is_valid() and check_password(
+            serializer.validated_data["old_password"], user.password
+        ):
             user.set_password(serializer.validated_data["password"])
             user.save()
             return Response({"status": "password set"})

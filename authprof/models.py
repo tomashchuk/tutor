@@ -9,10 +9,7 @@ class AuthUser(AbstractUser):
 
     STUDENT = "student"
     TUTOR = "tutor"
-    TYPES = (
-        (TUTOR, "Tutor"),
-        (STUDENT, "Student")
-    )
+    TYPES = ((TUTOR, "Tutor"), (STUDENT, "Student"))
 
     username = models.CharField(
         _("username"),
