@@ -5,6 +5,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from authprof.models import AuthUser
+from .domain import swift_order_topics, swift_order_materials
 from .models import (
     Course, CourseCategory, Topic, Material, QuizQuestion, UserCourse
 )
@@ -14,7 +15,7 @@ from .serializers import (
     TopicSerializer,
     MaterialSerializer,
     QuizQuestionSerializer,
-    UserCourseSerializer, CreateCourseSerializer,
+    UserCourseSerializer,
 )
 
 
@@ -75,6 +76,19 @@ class TopicViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
+    def update(self, request, *args, **kwargs):
+        order = request.data.get('order', None)
+        if order:
+            instance = self.get_object()
+            swift_order_topics(order, instance)
+        return super().update(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        course_id = request.data["course"]
+        last_topic = self.queryset.filter(course_id=course_id).order_by("-order").first()
+        request.data["order"] = last_topic.order + 1 if last_topic else 1
+        return super().create(request, *args, **kwargs)
+
     def get_queryset(self):
         course_id = self.request.query_params.get("course_id")
         if course_id:
@@ -92,11 +106,24 @@ class MaterialViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
+    def create(self, request, *args, **kwargs):
+        topic_id = request.data["topic"]
+        last_material = self.queryset.filter(topic_id=topic_id).order_by("-order").first()
+        request.data["order"] = last_material.order + 1 if last_material else 1
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        order = request.data.get('order', None)
+        if order:
+            instance = self.get_object()
+            swift_order_materials(order, instance)
+        return super().update(request, *args, **kwargs)
+
     def get_queryset(self):
         topic_id = self.request.query_params.get("topic_id")
         if topic_id:
             return self.queryset.filter(topic_id=topic_id)
-        raise ValidationError()
+        return self.queryset
 
 
 class QuizQuestionViewSet(ModelViewSet):

@@ -82,6 +82,7 @@ class TopicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Topic
         fields = "__all__"
+        extra_kwargs = {"order": {"required": False}}
 
 
 class AnswerOptionSerializers(serializers.ModelSerializer):

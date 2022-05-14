@@ -51,8 +51,11 @@ class UserCourse(BaseModel):
 class Topic(BaseModel):
     name = models.CharField(max_length=255, null=False)
     description = models.TextField()
-
+    order = models.PositiveSmallIntegerField(default=1)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="topics")
+
+    class Meta:
+        ordering = ["order"]
 
     def __str__(self):
         return self.name
@@ -73,7 +76,7 @@ class Material(BaseModel):
     )
     name = models.CharField(max_length=255, null=False)
     description = models.TextField(null=True)
-    order = models.PositiveSmallIntegerField()
+    order = models.PositiveSmallIntegerField(default=1)
     material_type = models.CharField(max_length=20, choices=TYPE, default=LESSON)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="materials")
 
