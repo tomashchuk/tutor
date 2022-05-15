@@ -6,26 +6,27 @@ from .views import (
     CourseCategoryViewSet,
     TopicViewSet,
     MaterialViewSet,
-    QuizQuestionViewSet,
+    QuestionViewSet,
     UserCourseViewSet,
+    StudentMaterialViewSet,
+    AnswerOptionViewSet,
+    AnswerViewSet,
 )
 
 router = routers.DefaultRouter()
 router.register(r"course", CourseViewSet)
 router.register(r"material", MaterialViewSet)
+router.register(r"question", QuestionViewSet)
 router.register(r"topic", TopicViewSet)
+router.register(r"student-material", StudentMaterialViewSet)
+router.register(r"answer-option", AnswerOptionViewSet)
+router.register(r"answer", AnswerViewSet)
 
 urlpatterns = [
     path(
         "course-category/",
         CourseCategoryViewSet.as_view({"get": "list"}),
         name="course_category",
-    ),
-    # path("topic/", TopicViewSet.as_view({"get": "list"}), name="topic"),
-    path(
-        "quiz-question/",
-        QuizQuestionViewSet.as_view({"get": "list"}),
-        name="quiz_question",
     ),
     path(
         "user-course/",

@@ -1,13 +1,15 @@
 from rest_framework import serializers
+from authprof.models import AuthUser
 from .models import (
     Course,
     CourseCategory,
     Topic,
     Material,
-    Quiz,
-    QuizQuestion,
+    Question,
+    Answer,
     AnswerOption,
     UserCourse,
+    StudentMaterial,
 )
 
 
@@ -75,18 +77,49 @@ class CreateCourseSerializer(CourseSerializer):
         return data
 
 
-class QuizSerializer(serializers.ModelSerializer):
+class StudentMaterialSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Quiz
+        model = StudentMaterial
         fields = "__all__"
 
 
-class MaterialSerializer(serializers.ModelSerializer):
-    content = serializers.SerializerMethodField()
+class AnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
+        fields = "__all__"
+        extra_kwargs = {"correct": {"read_only": True}}
 
-    def get_content(self, obj):
-        if hasattr(obj, "quiz"):
-            return QuizSerializer(instance=obj.quiz, context=self.context).data
+
+class AnswerOptionSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = AnswerOption
+        fields = "__all__"
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+    possible_answers = AnswerOptionSerializers(many=True, read_only=True)
+
+    class Meta:
+        model = Question
+        fields = ["text", "order", "possible_answers"]
+
+
+class MaterialSerializer(serializers.ModelSerializer):
+    student_material = serializers.SerializerMethodField()
+    questions = QuestionSerializer(many=True, read_only=True)
+
+    def get_student_material(self, obj):
+        request = self.context.get("request", None)
+        if request.user == AuthUser.STUDENT:
+            try:
+                student_material = StudentMaterial.objects.get(
+                    material_id=obj.id, student_id=request.user.id
+                )
+                return StudentMaterial(
+                    instance=student_material, context=self.context
+                ).data
+            except StudentMaterial.DoesNotExist:
+                return None
 
     class Meta:
         model = Material
@@ -100,20 +133,6 @@ class TopicSerializer(serializers.ModelSerializer):
         model = Topic
         fields = "__all__"
         extra_kwargs = {"order": {"required": False}}
-
-
-class AnswerOptionSerializers(serializers.ModelSerializer):
-    class Meta:
-        model = AnswerOption
-        fields = "__all__"
-
-
-class QuizQuestionSerializer(serializers.ModelSerializer):
-    possible_answers = AnswerOptionSerializers(many=True, read_only=True)
-
-    class Meta:
-        model = QuizQuestion
-        fields = ["text", "order", "possible_answers"]
 
 
 class UserCourseSerializer(serializers.ModelSerializer):

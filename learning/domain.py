@@ -1,6 +1,6 @@
 from django.db.models import QuerySet
 
-from learning.models import Topic, Material
+from learning.models import Topic, Material, Question
 
 
 def perform_swift(items: QuerySet, order: int, old_order: int) -> None:
@@ -28,3 +28,11 @@ def swift_order_materials(order: int, cmaterial: Material) -> None:
     )
     old_order = cmaterial.order
     perform_swift(materials_to_swift, order, old_order)
+
+
+def swift_order_questions(order: int, cquestion: Question) -> None:
+    questions_to_swift = Question.objects.filter(
+        material_id=cquestion.material_id
+    ).exclude(id=cquestion.id)
+    old_order = cquestion.order
+    perform_swift(questions_to_swift, order, old_order)

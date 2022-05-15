@@ -7,6 +7,17 @@ from authprof.models import AuthUser
 from shared.models import BaseModel
 
 
+class Status:
+    TODO = "todo"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    STATUS = (
+        (TODO, "To Do"),
+        (IN_PROGRESS, "In Progress"),
+        (COMPLETED, "Completed"),
+    )
+
+
 class CourseCategory(MPTTModel):
     name = models.CharField(max_length=50, unique=True)
     parent = TreeForeignKey(
@@ -39,19 +50,9 @@ class Course(BaseModel):
 
 
 class UserCourse(BaseModel):
-    TODO = "todo"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    STATUS = (
-        (TODO, "To Do"),
-        (IN_PROGRESS, "In Progress"),
-        (COMPLETED, "Completed"),
-    )
-
     user = models.ForeignKey(AuthUser, on_delete=models.SET_NULL, null=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-
-    status = models.CharField(max_length=20, choices=STATUS, default=TODO)
+    status = models.CharField(max_length=20, choices=Status.STATUS, default=Status.TODO)
 
 
 class Topic(BaseModel):
@@ -65,11 +66,6 @@ class Topic(BaseModel):
 
     def __str__(self):
         return self.name
-
-
-# class MaterialMedia(BaseModel):
-#     IMAGE
-#     type =
 
 
 class Material(BaseModel):
@@ -94,12 +90,16 @@ class Material(BaseModel):
         return self.name
 
 
-class Quiz(BaseModel):
-    time_to_complete = models.PositiveSmallIntegerField(null=True, blank=True)
+class StudentMaterial(BaseModel):
+    student = models.ForeignKey(AuthUser, on_delete=models.SET_NULL, null=True)
+    material = models.ForeignKey(Material, on_delete=models.CASCADE)
 
-    material = models.OneToOneField(
-        Material, on_delete=models.CASCADE, primary_key=True, related_name="quiz"
-    )
+    status = models.CharField(max_length=20, choices=Status.STATUS, default=Status.TODO)
+    mark = models.PositiveIntegerField(null=True, blank=True)
+    feedback = models.TextField(null=True, blank=True)
+    checked = models.BooleanField(default=False)
+
+    due_date = models.DateTimeField(null=True, blank=True)
 
 
 class AnswerOption(BaseModel):
@@ -109,8 +109,10 @@ class AnswerOption(BaseModel):
         return self.text
 
 
-class QuizQuestion(BaseModel):
-    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="questions")
+class Question(BaseModel):
+    material = models.ForeignKey(
+        Material, on_delete=models.CASCADE, related_name="questions"
+    )
     text = models.CharField(max_length=200)
     order = models.PositiveSmallIntegerField()
     possible_answers = models.ManyToManyField(AnswerOption)
@@ -124,22 +126,13 @@ class QuizQuestion(BaseModel):
         return self.text
 
 
-class QuizAnswer(BaseModel):
+class Answer(BaseModel):
     answer_option = models.ForeignKey(AnswerOption, on_delete=models.PROTECT)
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.PROTECT)
 
+    correct = models.BooleanField(null=True, blank=True)
 
-class QuizResult(BaseModel):
-    FAILED = "failed"
-    PASSED = "passed"
-    IN_PROGRESS = "in_progress"
-
-    STATUS = (
-        (IN_PROGRESS, "In Progress"),
-        (PASSED, "Passed"),
-        (FAILED, "Failed"),
-    )
-
-    status = models.CharField(max_length=20, choices=STATUS, default=IN_PROGRESS)
-    quiz = models.ForeignKey(Quiz, on_delete=models.PROTECT)
-    student = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
+    def save(self, *args, **kwargs):
+        self.correct = self.answer_option == self.question.correct
+        super().save(*args, **kwargs)

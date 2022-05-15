@@ -4,11 +4,10 @@ from .models import (
     Course,
     Topic,
     Material,
-    Quiz,
     AnswerOption,
-    QuizQuestion,
-    QuizAnswer,
-    QuizResult,
+    Question,
+    Answer,
+    StudentMaterial,
 )
 
 
@@ -32,26 +31,21 @@ class MaterialAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(Quiz)
-class QuizAdmin(admin.ModelAdmin):
-    pass
-
-
 @admin.register(AnswerOption)
 class AnswerOptionAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(QuizQuestion)
-class QuizQuestionAdmin(admin.ModelAdmin):
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(QuizAnswer)
-class QuizAnswerAdmin(admin.ModelAdmin):
+@admin.register(Answer)
+class AnswerAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(QuizResult)
-class QuizResultAdmin(admin.ModelAdmin):
+@admin.register(StudentMaterial)
+class StudentMaterialAdmin(admin.ModelAdmin):
     pass

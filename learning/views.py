@@ -6,14 +6,27 @@ from drf_yasg.utils import swagger_auto_schema
 
 from authprof.models import AuthUser
 from .domain import swift_order_topics, swift_order_materials
-from .models import Course, CourseCategory, Topic, Material, QuizQuestion, UserCourse
+from .models import (
+    Course,
+    CourseCategory,
+    Topic,
+    Material,
+    Question,
+    UserCourse,
+    StudentMaterial,
+    Answer,
+    AnswerOption,
+)
 from .serializers import (
     CourseSerializer,
     CourseCategorySerializer,
     TopicSerializer,
     MaterialSerializer,
-    QuizQuestionSerializer,
+    QuestionSerializer,
     UserCourseSerializer,
+    StudentMaterialSerializer,
+    AnswerSerializer,
+    AnswerOptionSerializers,
 )
 
 
@@ -160,9 +173,9 @@ class MaterialViewSet(ModelViewSet):
         return self.queryset
 
 
-class QuizQuestionViewSet(ModelViewSet):
-    queryset = QuizQuestion.objects.all()
-    serializer_class = QuizQuestionSerializer
+class QuestionViewSet(ModelViewSet):
+    queryset = Question.objects.all()
+    serializer_class = QuestionSerializer
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -177,8 +190,26 @@ class QuizQuestionViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
+    def create(self, request, *args, **kwargs):
+        material_id = request.data["material"]
+        material = Material.objects.filter(id=material_id).first()
+        if not material or material.material_type == Material.TESTING:
+            raise ValidationError()
+        last_question = (
+            self.queryset.filter(material_id=material_id).order_by("-order").first()
+        )
+        request.data["order"] = last_question.order + 1 if last_question else 1
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        order = request.data.get("order", None)
+        if order:
+            instance = self.get_object()
+            swift_order_materials(order, instance)
+        return super().update(request, *args, **kwargs)
+
     def get_queryset(self):
-        quiz_id = self.request.query_params.get("quiz_id")
+        quiz_id = self.request.query_params.get("material_id")
         if quiz_id:
             return self.queryset.filter(quiz_id=quiz_id)
         raise ValidationError()
@@ -194,3 +225,30 @@ class UserCourseViewSet(ModelViewSet):
         if queryset:
             raise ValidationError("You are already enrolled for this course")
         serializer.save(user=self.request.user)
+
+
+class StudentMaterialViewSet(ModelViewSet):
+    queryset = StudentMaterial.objects.all()
+    serializer_class = StudentMaterialSerializer
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if not user or user.user_type != AuthUser.STUDENT:
+            raise ValidationError()
+        serializer.save(student=self.request.user)
+
+
+class AnswerViewSet(ModelViewSet):
+    queryset = Answer.objects.all()
+    serializer_class = AnswerSerializer
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if not user or user.user_type != AuthUser.STUDENT:
+            raise ValidationError()
+        serializer.save(student=self.request.user)
+
+
+class AnswerOptionViewSet(ModelViewSet):
+    queryset = AnswerOption.objects.all()
+    serializer_class = AnswerOptionSerializers
