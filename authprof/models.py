@@ -36,5 +36,13 @@ class AuthUser(AbstractUser):
         self.username = f"{self.first_name} {self.last_name}"
         super().save(*args, **kwargs)
 
+    @property
+    def is_student(self):
+        return self.user_type == self.STUDENT
+
+    @property
+    def is_tutor(self):
+        return self.user_type == self.TUTOR
+
     # class Meta(AbstractUser.Meta):
     #     swappable = 'AUTH_USER_MODEL'

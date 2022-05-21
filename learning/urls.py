@@ -21,17 +21,13 @@ router.register(r"topic", TopicViewSet)
 router.register(r"student-material", StudentMaterialViewSet)
 router.register(r"answer-option", AnswerOptionViewSet)
 router.register(r"answer", AnswerViewSet)
+router.register(r"user-course", UserCourseViewSet)
 
 urlpatterns = [
     path(
         "course-category/",
         CourseCategoryViewSet.as_view({"get": "list"}),
         name="course_category",
-    ),
-    path(
-        "user-course/",
-        UserCourseViewSet.as_view({"post": "create"}),
-        name="user_course",
     ),
     path("", include(router.urls)),
 ]

@@ -93,15 +93,28 @@ class AnswerSerializer(serializers.ModelSerializer):
 class AnswerOptionSerializers(serializers.ModelSerializer):
     class Meta:
         model = AnswerOption
-        fields = "__all__"
+        fields = ["id", "text", "coins", "correct"]
+        extra_kwargs = {"correct": {"write_only": True}}
 
 
 class QuestionSerializer(serializers.ModelSerializer):
-    possible_answers = AnswerOptionSerializers(many=True, read_only=True)
+    possible_answers = AnswerOptionSerializers(many=True)
 
     class Meta:
         model = Question
-        fields = ["text", "order", "possible_answers"]
+        fields = ["id", "text", "order", "possible_answers", "multiple_answers", "material"]
+
+    def create(self, validated_data):
+        answers = validated_data.pop("possible_answers")
+        question = Question.objects.create(**validated_data)
+        request = self.context.get("request", None)
+        for answer in answers:
+            answer, created = AnswerOption.objects.get_or_create(
+                text=answer["text"],
+                question=question,
+                defaults={"coins": answer["coins"], "correct": answer["correct"]}
+            )
+        return question
 
 
 class MaterialSerializer(serializers.ModelSerializer):

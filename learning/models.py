@@ -102,37 +102,35 @@ class StudentMaterial(BaseModel):
     due_date = models.DateTimeField(null=True, blank=True)
 
 
-class AnswerOption(BaseModel):
-    text = models.CharField(max_length=200)
-
-    def __str__(self):
-        return self.text
-
-
 class Question(BaseModel):
     material = models.ForeignKey(
         Material, on_delete=models.CASCADE, related_name="questions"
     )
     text = models.CharField(max_length=200)
     order = models.PositiveSmallIntegerField()
-    possible_answers = models.ManyToManyField(AnswerOption)
-    correct = models.ForeignKey(
-        AnswerOption, related_name="correct", default=None, on_delete=models.CASCADE
-    )
-
+    multiple_answers = models.BooleanField(default=False)
     coins = models.PositiveSmallIntegerField(default=1)
 
     def __str__(self):
         return self.text
 
 
+class AnswerOption(BaseModel):
+    text = models.CharField(max_length=200)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="possible_answers")
+    coins = models.PositiveSmallIntegerField(default=1)
+    correct = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.text
+
+
 class Answer(BaseModel):
-    answer_option = models.ForeignKey(AnswerOption, on_delete=models.PROTECT)
+    answer_option = models.ManyToManyField(AnswerOption)
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.PROTECT)
 
     correct = models.BooleanField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        self.correct = self.answer_option == self.question.correct
         super().save(*args, **kwargs)

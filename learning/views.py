@@ -1,5 +1,8 @@
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -218,6 +221,19 @@ class QuestionViewSet(ModelViewSet):
 class UserCourseViewSet(ModelViewSet):
     queryset = UserCourse.objects.all()
     serializer_class = UserCourseSerializer
+
+    @action(detail=False, methods=["post"])
+    def join_course_secret(self, request):
+        secret_code = request.data.get("secret_code")
+        if not secret_code or not request.user.is_student:
+            raise ValidationError()
+        course = Course.objects.filter(secret_code=secret_code).first()
+        if not course:
+            raise ValidationError("Course does not exist")
+        if self.queryset.filter(user_id=request.user.id, course_id=course.id):
+            raise ValidationError("You are already enrolled for this course")
+        UserCourse.objects.create(user=request.user, course=course)
+        return Response(status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
         course = serializer.validated_data["course"]
