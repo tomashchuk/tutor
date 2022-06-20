@@ -11,6 +11,7 @@ from .models import (
     UserCourse,
     StudentMaterial,
 )
+from rest_framework.fields import CurrentUserDefault
 
 
 class CourseCategorySerializer(serializers.ModelSerializer):
@@ -26,7 +27,6 @@ class CourseSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
         queryset=CourseCategory.objects.all(), write_only=True
     )
-    # category = CourseCategorySerializer(read_only=True, required=False)
     user_status = serializers.SerializerMethodField()
 
     def get_user_status(self, obj):
@@ -84,21 +84,41 @@ class StudentMaterialSerializer(serializers.ModelSerializer):
 
 
 class AnswerSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        many = kwargs.pop('many', True)
+        super().__init__(many=many, *args, **kwargs)
+
     class Meta:
         model = Answer
         fields = "__all__"
-        extra_kwargs = {"correct": {"read_only": True}}
+        extra_kwargs = {"correct": {"read_only": True}, "earned_coins": {"read_only": True}}
 
 
 class AnswerOptionSerializers(serializers.ModelSerializer):
     class Meta:
         model = AnswerOption
         fields = ["id", "text", "coins", "correct"]
-        extra_kwargs = {"correct": {"write_only": True}}
+        # extra_kwargs = {"correct": {"write_only": True}}
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # user = CurrentUserDefault()
+        # if user.is_anonymous():
+        #     return data
+        # data.update(
+        #     {
+        #         "correct": instance.correct if user.is_tutor else None
+        #     }
+        # )
+        return data
 
 
 class QuestionSerializer(serializers.ModelSerializer):
     possible_answers = AnswerOptionSerializers(many=True)
+
+    def __init__(self, *args, **kwargs):
+        many = kwargs.pop('many', True)
+        super().__init__(many=many, *args, **kwargs)
 
     class Meta:
         model = Question
@@ -116,6 +136,16 @@ class QuestionSerializer(serializers.ModelSerializer):
             )
         return question
 
+    def update(self, instance, validated_data):
+        answers = validated_data.pop('possible_answers')
+        for answer in answers:
+            ingredient, created = AnswerOption.objects.update_or_create(
+                text=answer["text"],
+                question=instance.id,
+                defaults={"coins": answer["coins"], "correct": answer["correct"]}
+            )
+        return super().update(instance, validated_data)
+
 
 class MaterialSerializer(serializers.ModelSerializer):
     student_material = serializers.SerializerMethodField()
@@ -128,7 +158,7 @@ class MaterialSerializer(serializers.ModelSerializer):
                 student_material = StudentMaterial.objects.get(
                     material_id=obj.id, student_id=request.user.id
                 )
-                return StudentMaterial(
+                return StudentMaterialSerializer(
                     instance=student_material, context=self.context
                 ).data
             except StudentMaterial.DoesNotExist:

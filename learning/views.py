@@ -18,7 +18,7 @@ from .models import (
     UserCourse,
     StudentMaterial,
     Answer,
-    AnswerOption,
+    AnswerOption, Status,
 )
 from .serializers import (
     CourseSerializer,
@@ -196,7 +196,7 @@ class QuestionViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         material_id = request.data["material"]
         material = Material.objects.filter(id=material_id).first()
-        if not material or material.material_type == Material.TESTING:
+        if not material or not material.material_type == Material.TESTING:
             raise ValidationError()
         last_question = (
             self.queryset.filter(material_id=material_id).order_by("-order").first()
@@ -214,8 +214,8 @@ class QuestionViewSet(ModelViewSet):
     def get_queryset(self):
         quiz_id = self.request.query_params.get("material_id")
         if quiz_id:
-            return self.queryset.filter(quiz_id=quiz_id)
-        raise ValidationError()
+            return self.queryset.filter(material_id=quiz_id)
+        return self.queryset
 
 
 class UserCourseViewSet(ModelViewSet):
@@ -258,11 +258,35 @@ class AnswerViewSet(ModelViewSet):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
         user = self.request.user
         if not user or user.user_type != AuthUser.STUDENT:
             raise ValidationError()
-        serializer.save(student=self.request.user)
+        data_list = []
+        for data in request.data:
+            data.update({"user": user.id})
+            data_list.append(data)
+        #     serializer = self.get_serializer(data=data)
+        #     serializer.is_valid(raise_exception=True)
+        #     self.perform_create(serializer)
+        # return super(AnswerViewSet, self).list(self, request, *args, **kwargs)
+        serializer = self.get_serializer(data=data_list, many=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        material = Question.objects.get(id=request.data[0].get("question")).material
+        student_material = StudentMaterial.objects.get(material_id=material.id, student_id=user.id)
+        student_material.status = Status.COMPLETED
+        student_material.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    # def perform_create(self, serializer):
+    #     user = self.request.user
+    #     if not user or user.user_type != AuthUser.STUDENT:
+    #         raise ValidationError()
+    #     serializer.save(user=self.request.user)
 
 
 class AnswerOptionViewSet(ModelViewSet):

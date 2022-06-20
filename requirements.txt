@@ -9,3 +9,8 @@ drf-yasg
 django-cors-headers
 django-cors-middleware
 django-mptt
+pytest
+pytest-django
+pytest-cov
+mixer
+mock

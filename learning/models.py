@@ -1,7 +1,7 @@
 from mptt.models import MPTTModel, TreeForeignKey
 
 from django.db import models
-from django.core.validators import MinLengthValidator
+from django.core.validators import MinLengthValidator, MinValueValidator
 
 from authprof.models import AuthUser
 from shared.models import BaseModel
@@ -118,7 +118,7 @@ class Question(BaseModel):
 class AnswerOption(BaseModel):
     text = models.CharField(max_length=200)
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="possible_answers")
-    coins = models.PositiveSmallIntegerField(default=1)
+    coins = models.FloatField(MinValueValidator(0.0))
     correct = models.BooleanField(default=False)
 
     def __str__(self):
@@ -126,11 +126,33 @@ class AnswerOption(BaseModel):
 
 
 class Answer(BaseModel):
+    FAILED = "failed"
+    PARTIALLY_CORRECT = "partially_correct"
+    CORRECT = "correct"
+    RESULT = (
+        (FAILED, "Failed"),
+        (PARTIALLY_CORRECT, "Partially orrect"),
+        (CORRECT, "Correct"),
+    )
     answer_option = models.ManyToManyField(AnswerOption)
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.PROTECT)
+    earned_coins = models.FloatField(null=True)
+    correct = models.CharField(max_length=25, choices=RESULT, default=FAILED)
 
-    correct = models.BooleanField(null=True, blank=True)
+    def process_result(self):
+        correct_ans_opt = self.question.possible_answers.filter(correct=True)
+        correct_ans_opt_ids = set([correct_ans.id for correct_ans in correct_ans_opt])
+        ans_ids = set([ans.id for ans in self.answer_option.all()])
+        self.earned_coins = len(ans_ids.intersection(correct_ans_opt_ids)) / len(correct_ans_opt_ids)
+        if self.earned_coins == 0.0:
+            self.correct = self.FAILED
+        elif self.earned_coins < 1.0:
+            self.correct = self.PARTIALLY_CORRECT
+        else:
+            self.correct = self.CORRECT
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+        self.process_result()
+        super().save()
